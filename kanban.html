@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dev Progress Board — Multi-project</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    #todo .task {
+      background-color: rgb(238 242 255);
+      /* indigo-50 */
+      color: rgb(46, 40, 129);
+      /* indigo-800 */
+    }
+
+    #progress .task {
+      background-color: rgb(239 246 255);
+      /* blue-50 */
+      color: rgb(30 64 175);
+      /* blue-800 */
+    }
+
+    #done .task {
+      background-color: rgb(240 253 244);
+      /* green-50 */
+      color: rgb(22 101 52);
+      /* green-800 */
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 font-sans h-screen flex">
+
+  <!-- SIDEBAR -->
+  <aside class="w-72 bg-white shadow-lg flex flex-col">
+    <div class="px-4 py-4 border-b">
+      <h2 class="text-lg font-semibold text-gray-800">Projects</h2>
+    </div>
+
+    <ul id="projectList" class="flex-1 overflow-auto p-3 space-y-2"></ul>
+
+    <div class="p-3 border-t">
+      <input id="newProjectName" type="text" placeholder="New project name"
+        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-indigo-300 mb-2" />
+      <button onclick="addProject()" class="w-full bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700">+
+        Add Project</button>
+    </div>
+
+    <div class="p-3 border-t mt-2">
+      <button onclick="exportAll()" class="w-full bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 mb-2">
+        Export All Projects
+      </button>
+      <input type="file" id="importFile" class="mb-2 w-full text-sm" />
+      <button onclick="importAll()" class="w-full bg-yellow-600 text-white px-3 py-2 rounded-md hover:bg-yellow-700">
+        Import Projects
+      </button>
+      <button onclick="openArchiveModal()"
+        class="mt-2 w-full bg-gray-200 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-300">View Archive</button>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <div class="flex-1 flex flex-col">
+    <header class="flex items-center justify-between px-6 py-4 bg-white shadow">
+      <h1 class="text-2xl font-bold text-indigo-600" id="currentProject">Select a project</h1>
+      <div class="flex items-center gap-3">
+        <button onclick="openTaskModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">+
+          New Task</button>
+      </div>
+    </header>
+
+    <!-- BOARD -->
+    <main class="flex-1 flex gap-6 px-6 py-6 overflow-x-auto">
+      <section class="flex-1 bg-white rounded-lg shadow p-2 flex flex-col w-1/4">
+        <div class="sticky top-0 bg-white py-3 z-10">
+          <h2 class="text-lg font-medium text-gray-700 text-center">Todo</h2>
+        </div>
+        <div id="todo" class="dropzone flex-1 space-y-3 p-2 rounded-md mt-1 ring-indigo-400 bg-gray-50 overflow-y-auto">
+        </div>
+      </section>
+
+      <section class="flex-1 bg-white rounded-lg shadow p-2 flex flex-col w-1/4">
+        <div class="sticky top-0 bg-white py-3 z-10">
+          <h2 class="text-lg font-medium text-gray-700 text-center">In Progress</h2>
+        </div>
+        <div id="progress"
+          class="dropzone flex-1 space-y-3 p-2 rounded-md mt-1 ring-indigo-400 bg-gray-50 overflow-y-auto"></div>
+      </section>
+
+      <section class="flex-1 bg-white rounded-lg shadow p-2 flex flex-col w-1/4">
+        <div class="sticky top-0 bg-white py-3 z-10">
+          <h2 class="text-lg font-medium text-gray-700 text-center">Done</h2>
+        </div>
+        <div id="done" class="dropzone flex-1 space-y-3 p-2 rounded-md mt-1 ring-indigo-400 bg-gray-50 overflow-y-auto">
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="px-6 pb-3 text-center">
+        <p class="text-xs text-gray-600">2025 © Developed by Atif Mustaffa</p>
+    </footer>
+  </div>
+
+  <!-- Task Modal -->
+  <div id="taskModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 w-96 shadow-lg">
+      <h2 id="taskModalTitle" class="text-xl font-semibold mb-4">Add New Task</h2>
+
+      <input id="modalTaskTitle" type="text" placeholder="Task title"
+        class="w-full px-3 py-2 border rounded-md mb-2 focus:outline-none focus:ring focus:ring-indigo-400" />
+
+      <textarea id="modalTaskDesc" placeholder="Description" rows="3"
+        class="w-full px-3 py-2 border rounded-md mb-2 focus:outline-none focus:ring focus:ring-indigo-400"></textarea>
+
+      <input id="modalTaskTags" type="text" placeholder="Tags (comma-separated)"
+        class="w-full px-3 py-2 border rounded-md mb-4 focus:outline-none focus:ring focus:ring-indigo-400" />
+
+      <div class="flex justify-end gap-2">
+        <button onclick="closeTaskModal()" class="px-4 py-2 rounded-md border hover:bg-gray-100">Cancel</button>
+
+        <!-- Add button -->
+        <button id="modalAddBtn" onclick="addTaskFromModal()"
+          class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">
+          Add
+        </button>
+
+        <!-- Update button -->
+        <button id="modalUpdateBtn" onclick="updateTaskFromModal()"
+          class="hidden px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700">
+          Update
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- View Task Modal -->
+  <div id="viewTaskModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 w-96 shadow-lg">
+      <h2 class="text-xl font-semibold mb-4">Task Details</h2>
+
+      <div class="mb-3">
+        <h3 class="font-medium text-gray-800">Title</h3>
+        <p id="viewTaskTitle" class="text-gray-700"></p>
+      </div>
+
+      <div class="mb-3">
+        <h3 class="font-medium text-gray-800">Description</h3>
+        <p id="viewTaskDesc" class="text-gray-600 whitespace-pre-line"></p>
+      </div>
+
+      <div class="mb-3">
+        <h3 class="font-medium text-gray-800">Tags</h3>
+        <div id="viewTaskTags" class="flex flex-wrap gap-1"></div>
+      </div>
+
+      <div class="mb-3">
+        <h3 class="font-medium text-gray-800">Last Updated</h3>
+        <p id="viewTaskTimestamps" class="text-sm text-gray-500"></p>
+      </div>
+
+      <div class="flex justify-end">
+        <button onclick="closeViewTaskModal()"
+          class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Archive Modal -->
+  <div id="archiveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 w-96 shadow-lg">
+      <h2 class="text-xl font-semibold mb-4">Archived Tasks</h2>
+      <div id="archiveList" class="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pb-2"></div>
+      <div class="flex justify-end mt-4">
+        <button onclick="closeArchiveModal()" class="px-4 py-2 rounded-md border hover:bg-gray-100">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global tooltip -->
+  <div id="tooltip" class="fixed bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-50
+            opacity-0 pointer-events-none transition-opacity">
+  </div>
+
+
+  <script>
+    let dragged = null;
+    let currentProject = null;
+    let editingTaskDiv = null;
+    const taskZones = ["todo", "progress", "done"];
+
+    // --- Projects ---
+    function loadProjects() {
+      const projects = JSON.parse(localStorage.getItem("projects") || "[]");
+      const list = document.getElementById("projectList");
+      list.innerHTML = "";
+      projects.forEach(name => {
+        const li = document.createElement("li");
+        li.className = "flex items-center justify-between px-3 py-2 bg-gray-100 rounded hover:bg-indigo-50 cursor-pointer";
+        const left = document.createElement("div");
+        left.className = "truncate";
+        left.textContent = name;
+        left.onclick = () => switchProject(name);
+        const right = document.createElement("div");
+        right.className = "flex items-center gap-2";
+        const del = document.createElement("button");
+        del.className = "text-xs text-red-500 hover:text-red-700";
+        del.textContent = "Delete";
+        del.onclick = (e) => { e.stopPropagation(); deleteProject(name); };
+        right.appendChild(del);
+        li.appendChild(left);
+        li.appendChild(right);
+        list.appendChild(li);
+      });
+    }
+
+    function addProject() {
+      const input = document.getElementById("newProjectName");
+      const name = input.value.trim();
+      if (!name) return alert("Project name required");
+      let projects = JSON.parse(localStorage.getItem("projects") || "[]");
+      if (projects.includes(name)) { input.value = ""; return; }
+      projects.push(name);
+      localStorage.setItem("projects", JSON.stringify(projects));
+      localStorage.setItem("tasks_" + name, JSON.stringify({ todo: [], progress: [], done: [] }));
+      input.value = "";
+      loadProjects();
+      switchProject(name);
+    }
+
+    function deleteProject(name) {
+      if (!confirm(`Delete project "${name}"?`)) return;
+      let projects = JSON.parse(localStorage.getItem("projects") || "[]");
+      projects = projects.filter(p => p !== name);
+      localStorage.setItem("projects", JSON.stringify(projects));
+      localStorage.removeItem("tasks_" + name);
+      if (currentProject === name) {
+        currentProject = null;
+        document.getElementById("currentProject").textContent = "Select a project";
+        clearBoard();
+      }
+      loadProjects();
+    }
+
+    function switchProject(name) {
+      currentProject = name;
+      document.getElementById("currentProject").textContent = name;
+      localStorage.setItem("kanban.currentProject", name);
+      const saved = JSON.parse(localStorage.getItem("tasks_" + name) || "{}");
+      loadTasks({ todo: saved.todo || [], progress: saved.progress || [], done: saved.done || [] });
+    }
+
+    function clearBoard() {
+      taskZones.forEach(z => document.getElementById(z).innerHTML = "");
+    }
+
+    // --- Tasks ---
+    function loadTasks(tasks) {
+      taskZones.forEach(zone => {
+        const container = document.getElementById(zone);
+        container.innerHTML = "";
+        let items = tasks[zone] || [];
+
+        // Only sort done by done timestamp descending
+        if (zone === "done") {
+          items = items.sort((a, b) => {
+            const ta = a.moved.done ? new Date(a.moved.done).getTime() : 0;
+            const tb = b.moved.done ? new Date(b.moved.done).getTime() : 0;
+            return tb - ta; // latest first
+          });
+        }
+
+        items.forEach(taskObj => container.appendChild(createTask(taskObj)));
+      });
+    }
+
+    function formatShort(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr);
+
+      const time = d.toLocaleTimeString(undefined, {
+        hour: "numeric",
+        minute: "numeric"
+      });
+      const date = d.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric"
+      });
+
+      return `${date}, ${time} `;
+    }
+
+    function renderTaskContent(taskDiv, taskObj) {
+      const newDiv = createTask(taskObj);
+      taskDiv.replaceWith(newDiv);
+    }
+
+    function createTask(taskObj) {
+      const div = document.createElement("div");
+      div.className = "task text-gray-800 px-3 py-2 rounded shadow cursor-grab flex flex-col gap-1 w-full break-words";
+      div.draggable = true;
+
+      // header
+      const header = document.createElement("div");
+      header.className = "flex items-center justify-between";
+
+      const titleSpan = document.createElement("span");
+      titleSpan.className = "font-semibold line-clamp-2";
+      titleSpan.textContent = taskObj.title;
+
+      const descSpan = document.createElement("span");
+      descSpan.className = "text-sm text-gray-600 truncate";
+      descSpan.textContent = taskObj.description;
+
+      const tagContainer = document.createElement("div");
+      tagContainer.className = "flex flex-wrap gap-1";
+      taskObj.tags.forEach(tag => {
+        const t = document.createElement("span");
+        t.className = "bg-indigo-200 text-indigo-800 text-xs px-2 py-0.5 rounded";
+        t.textContent = tag;
+        tagContainer.appendChild(t);
+      });
+
+      // timestamp display
+      const ts = document.createElement("div");
+      const tsSpan = document.createElement("span");
+      ts.className = "timestamp text-xs text-gray-500 mt-1";
+      let timestamps = taskObj.updated_at || new Date().toISOString();
+      let tsText = `${new Date(timestamps).toLocaleString()}`;
+
+      tsSpan.textContent = formatShort(timestamps);
+      attachTooltip(tsSpan, tsText);
+      ts.appendChild(tsSpan);
+
+      // create container for actions
+      const actionWrapper = document.createElement("div");
+      actionWrapper.className = "relative self-start";
+
+      // menu button (3-dots)
+      const menuBtn = document.createElement("button");
+      menuBtn.className = "text-gray-600 focus:bg-indigo-100 hover:bg-indigo-100 w-6 h-6 rounded";
+      menuBtn.innerHTML = "⋮"; // vertical 3 dots
+      menuBtn.onclick = (e) => {
+        e.stopPropagation();
+        // close other menus
+        document.querySelectorAll(".menu:not(.hidden)").forEach(m => m.classList.add("hidden"));
+        menuContent.classList.toggle("hidden");
+      };
+
+      // menu content
+      const menuContent = document.createElement("div");
+      menuContent.className = "menu absolute right-0 mt-1 w-24 bg-white border rounded-md shadow-lg hidden flex-col z-20 p-1";
+
+      // Edit option
+      const editOpt = document.createElement("button");
+      editOpt.className = "text-left px-3 py-1 w-full hover:bg-gray-100 text-sm rounded";
+      editOpt.textContent = "Edit";
+      editOpt.onclick = (e) => { e.stopPropagation(); openEditTaskModal(div); menuContent.classList.add("hidden"); };
+
+      // Archive option
+      const archOpt = document.createElement("button");
+      archOpt.className = "text-left px-3 py-1 w-full hover:bg-gray-100 text-sm rounded";
+      archOpt.textContent = "Archive";
+      archOpt.onclick = (e) => { e.stopPropagation(); archiveTask(div); menuContent.classList.add("hidden"); };
+
+      // Delete option
+      const delOpt = document.createElement("button");
+      delOpt.className = "text-left px-3 py-1 w-full hover:bg-red-100 text-red-600 text-sm rounded";
+      delOpt.textContent = "Delete";
+      delOpt.onclick = (e) => { e.stopPropagation(); div.remove(); saveTasks(); };
+
+      menuContent.appendChild(editOpt);
+      menuContent.appendChild(archOpt);
+      menuContent.appendChild(delOpt);
+      actionWrapper.appendChild(menuBtn);
+      actionWrapper.appendChild(menuContent);
+
+      header.appendChild(titleSpan);
+      header.appendChild(actionWrapper);
+
+      div.appendChild(header);
+
+      if (taskObj.description && taskObj.description.trim() !== "") {
+        div.appendChild(descSpan);
+      }
+
+      if (taskObj.tags && taskObj.tags.length > 0) {
+        div.appendChild(tagContainer);
+      }
+
+      div.appendChild(ts);
+
+      let dragFrom = null;
+      div.addEventListener("dragstart", () => {
+        dragged = div;
+        dragFrom = div.parentElement.id;
+      });
+      div.addEventListener("dragend", () => {
+        let sameZone = dragFrom === div.parentElement.id;
+        dragged = null;
+        dragFrom = null;
+        if (sameZone) return;
+        updateTaskTimestamps(div);
+        insertTaskSorted(div);
+
+        saveTasks();
+        console.log("Task updated", JSON.parse(div.dataset.task));
+      });
+
+      // store the object in dataset for easier save/load
+      div.dataset.task = JSON.stringify(taskObj);
+
+      // add click handler
+      div.onclick = (e) => {
+        if (e.target.closest("button")) return; // ignore menu clicks
+        const taskObj = JSON.parse(div.dataset.task);
+        openViewTaskModal(taskObj);
+      };
+
+      return div;
+    }
+
+    function saveTasks() {
+      if (!currentProject) return;
+      const tasks = {};
+      taskZones.forEach(zone => {
+        tasks[zone] = [...document.getElementById(zone).children].map(div => JSON.parse(div.dataset.task));
+      });
+
+      localStorage.setItem("tasks_" + currentProject, JSON.stringify(tasks));
+    }
+
+    function updateTaskTimestamps(div) {
+      const taskObj = JSON.parse(div.dataset.task);
+      const parentId = div.parentElement.id;
+
+      // update timestamps
+      const timestamp = new Date().toISOString();
+      taskObj.moved[parentId] = timestamp;
+      taskObj.updated_at = timestamp;
+
+      div.dataset.task = JSON.stringify(taskObj);
+
+      // update display
+      const ts = div.querySelector("div.timestamp");
+      const tsSpan = ts.querySelector("span");
+      tsSpan.innerHTML = '';
+      tsSpan.textContent = formatShort(timestamp);
+      attachTooltip(tsSpan, new Date(timestamp).toLocaleString());
+    }
+
+    function insertTaskSorted(div) {
+      const zone = div.parentElement.id;
+      const SORTED_ZONE = ['done'];
+      if (!SORTED_ZONE.includes(zone)) return;
+
+      const container = document.getElementById(zone);
+      const taskObj = JSON.parse(div.dataset.task);
+      const ts = taskObj.moved.done ? new Date(taskObj.moved.done).getTime() : 0;
+
+      let inserted = false;
+      for (const child of container.children) {
+        const childTs = child.dataset.task ? (JSON.parse(child.dataset.task).moved.done ? new Date(JSON.parse(child.dataset.task).moved.done).getTime() : 0) : 0;
+        if (ts > childTs) {
+          container.insertBefore(div, child);
+          inserted = true;
+          break;
+        }
+      }
+      if (!inserted) container.appendChild(div); // last if newest
+    }
+
+    function updateTaskFromModal() {
+      if (!editingTaskDiv) return;
+
+      const title = document.getElementById("modalTaskTitle").value.trim();
+      const description = document.getElementById("modalTaskDesc").value.trim();
+      const tags = document.getElementById("modalTaskTags").value
+        .split(",")
+        .map(t => t.trim())
+        .filter(Boolean);
+
+      const taskObj = JSON.parse(editingTaskDiv.dataset.task);
+      taskObj.title = title;
+      taskObj.description = description;
+      taskObj.tags = tags;
+      taskObj.updated_at = new Date().toISOString();
+
+      editingTaskDiv.dataset.task = JSON.stringify(taskObj);
+
+      // Re-render card content
+      renderTaskContent(editingTaskDiv, taskObj);
+
+      saveTasks();
+      closeTaskModal();
+    }
+
+    function archiveTask(div) {
+      if (!currentProject) return;
+
+      // load archived tasks
+      const archived = JSON.parse(localStorage.getItem("archived_" + currentProject) || "[]");
+      const taskObj = JSON.parse(div.dataset.task);
+
+      // save the column it was in
+      taskObj.archive_on = div.parentElement.id;
+
+      // save task object
+      archived.push(taskObj);
+
+      localStorage.setItem("archived_" + currentProject, JSON.stringify(archived));
+
+      // remove from board
+      div.remove();
+      saveTasks();
+    }
+
+    function restoreArchivedTask(index) {
+      const archived = JSON.parse(localStorage.getItem("archived_" + currentProject) || "[]");
+      const taskObj = archived.splice(index, 1)[0];
+      localStorage.setItem("archived_" + currentProject, JSON.stringify(archived));
+
+      // restore to last column, default to todo if missing
+      const lastParentId = taskObj.archive_on || "todo";
+      delete taskObj.archive_on;
+
+      const taskDiv = createTask(taskObj);
+      document.getElementById(lastParentId).appendChild(taskDiv);
+
+      // re-sort
+      insertTaskSorted(taskDiv);
+
+      saveTasks();
+      if (archived.length) openArchiveModal(); // refresh archive list
+      else closeArchiveModal();
+    }
+
+    function exportAll() {
+      const obj = {
+        projects: JSON.parse(localStorage.getItem("projects") || "[]"),
+        tasks: {}
+      };
+      obj.projects.forEach(p => {
+        obj.tasks[p] = JSON.parse(localStorage.getItem("tasks_" + p) || "{}");
+      });
+      const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `kanban_backup_${new Date().toISOString().slice(0, 19)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      alert("Exported all projects!");
+    }
+
+    function importAll() {
+      const fileInput = document.getElementById("importFile");
+      if (!fileInput.files.length) return alert("Select a JSON file to import!");
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data.projects || !data.tasks) throw "Invalid JSON format";
+          data.projects.forEach(p => {
+            localStorage.setItem("tasks_" + p, JSON.stringify(data.tasks[p] || { todo: [], progress: [], done: [] }));
+          });
+          localStorage.setItem("projects", JSON.stringify(data.projects));
+          loadProjects();
+          alert("Imported projects successfully!");
+        } catch (err) {
+          alert("Failed to import JSON: " + err);
+        }
+      };
+      reader.readAsText(file);
+      fileInput.value = "";
+    }
+
+    function openTaskModal() {
+      document.getElementById("taskModalTitle").textContent = "Add New Task";
+      document.getElementById("taskModal").classList.remove("hidden");
+      document.getElementById("modalTaskTitle").value = "";
+      document.getElementById("modalTaskTitle").focus();
+    }
+
+    function closeTaskModal() {
+      document.getElementById("taskModal").classList.add("hidden");
+
+      // Clear inputs
+      document.getElementById("modalTaskTitle").value = "";
+      document.getElementById("modalTaskDesc").value = "";
+      document.getElementById("modalTaskTags").value = "";
+
+      // Reset buttons
+      document.getElementById("modalAddBtn").classList.remove("hidden");
+      document.getElementById("modalUpdateBtn").classList.add("hidden");
+
+      editingTaskDiv = null;
+    }
+
+    function openEditTaskModal(div) {
+      const taskObj = JSON.parse(div.dataset.task);
+      editingTaskDiv = div;
+
+      document.getElementById("taskModalTitle").textContent = "Edit Task";
+
+      // Fill fields
+      document.getElementById("modalTaskTitle").value = taskObj.title;
+      document.getElementById("modalTaskDesc").value = taskObj.description || "";
+      document.getElementById("modalTaskTags").value = (taskObj.tags || []).join(", ");
+
+      // Toggle buttons
+      document.getElementById("modalAddBtn").classList.add("hidden");
+      document.getElementById("modalUpdateBtn").classList.remove("hidden");
+
+      document.getElementById("taskModal").classList.remove("hidden");
+      document.getElementById("modalTaskTitle").focus();
+    }
+
+    function addTaskFromModal() {
+      const title = document.getElementById("modalTaskTitle").value.trim();
+      const description = document.getElementById("modalTaskDesc").value.trim();
+      const tags = document.getElementById("modalTaskTags").value
+        .split(",")
+        .map(t => t.trim())
+        .filter(t => t);
+      const createdTimestamp = new Date().toISOString();
+
+      if (!title) return alert("Task title required");
+
+      const taskObj = {
+        title,
+        description,
+        tags,
+        created_at: createdTimestamp,
+        moved: {
+          todo: createdTimestamp,
+          progress: null,
+          done: null
+        }
+      };
+      const task = createTask(taskObj);
+      document.getElementById("todo").appendChild(task);
+      saveTasks();
+      closeTaskModal();
+    }
+
+    function openViewTaskModal(taskObj) {
+      document.getElementById("viewTaskTitle").textContent = taskObj.title;
+      document.getElementById("viewTaskDesc").textContent = taskObj.description || "";
+
+      const tagsContainer = document.getElementById("viewTaskTags");
+      tagsContainer.innerHTML = "";
+      (taskObj.tags || []).forEach(tag => {
+        const span = document.createElement("span");
+        span.className = "bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded";
+        span.textContent = tag;
+        tagsContainer.appendChild(span);
+      });
+
+      // Show timestamps
+      let timestamps = taskObj.updated_at || null;
+      const tsText = `${timestamps ? new Date(timestamps).toLocaleString() : ''}`;
+      document.getElementById("viewTaskTimestamps").textContent = tsText;
+
+      document.getElementById("viewTaskModal").classList.remove("hidden");
+    }
+
+    function closeViewTaskModal() {
+      document.getElementById("viewTaskModal").classList.add("hidden");
+    }
+
+    function openArchiveModal() {
+      const modal = document.getElementById("archiveModal");
+      const list = document.getElementById("archiveList");
+      list.innerHTML = "";
+
+      const archived = JSON.parse(localStorage.getItem("archived_" + currentProject) || "[]");
+      archived.forEach((taskObj, idx) => {
+        const div = document.createElement("div");
+        div.className = "bg-gray-100 px-3 py-2 rounded shadow flex justify-between items-center";
+
+        const span = document.createElement("span");
+        span.className = "font-semibold line-clamp-2";
+        span.textContent = taskObj.title;
+
+        const restoreBtn = document.createElement("button");
+        restoreBtn.className = "text-xs text-blue-600 hover:text-blue-800";
+        restoreBtn.textContent = "Restore";
+        restoreBtn.onclick = () => {
+          restoreArchivedTask(idx);
+        };
+
+        div.appendChild(span);
+        div.appendChild(restoreBtn);
+        list.appendChild(div);
+      });
+
+      modal.classList.remove("hidden");
+    }
+
+    function closeArchiveModal() {
+      document.getElementById("archiveModal").classList.add("hidden");
+    }
+
+    function attachTooltip(el, text) {
+      const tooltip = document.getElementById("tooltip");
+
+      el.addEventListener("mouseenter", (e) => {
+        tooltip.textContent = text;
+
+        const rect = e.target.getBoundingClientRect();
+        const ttRect = tooltip.getBoundingClientRect();
+
+        tooltip.style.top = rect.top - ttRect.height - 5 + "px";
+        tooltip.style.left = rect.left + "px";
+
+        tooltip.classList.remove("opacity-0");
+        tooltip.classList.add("opacity-100");
+      });
+
+      el.addEventListener("mouseleave", () => {
+        tooltip.classList.remove("opacity-100");
+        tooltip.classList.add("opacity-0");
+      });
+    }
+
+    // --- Global events ---
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") document.querySelectorAll(".menu:not(.hidden)").forEach(m => m.classList.add("hidden"));
+    });
+
+    document.addEventListener("click", () => document.querySelectorAll(".menu:not(.hidden)").forEach(m => m.classList.add("hidden")));
+
+    // --- Drag & Drop ---
+    document.querySelectorAll(".dropzone").forEach(zone => {
+      let dragCounter = 0;
+
+      zone.addEventListener("dragenter", e => {
+        e.preventDefault();
+        dragCounter++;
+        zone.classList.add("ring-2", "bg-indigo-50");
+      });
+
+      zone.addEventListener("dragleave", e => {
+        dragCounter--;
+        if (dragCounter === 0) {
+          zone.classList.remove("ring-2", "bg-indigo-50");
+        }
+      });
+
+      zone.addEventListener("dragover", e => {
+        e.preventDefault(); // still needed to allow drop
+      });
+
+      zone.addEventListener("drop", e => {
+        e.preventDefault();
+        dragCounter = 0;
+        if (dragged) zone.appendChild(dragged);
+        zone.classList.remove("ring-2", "bg-indigo-50");
+        saveTasks();
+      });
+    });
+
+    // --- Init ---
+    function init() {
+      loadProjects();
+      const sel = localStorage.getItem("kanban.currentProject");
+      if (sel) switchProject(sel);
+    }
+    init();
+  </script>
+</body>
+
+</html>
