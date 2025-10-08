@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Dev Progress Board — Multi-project</title>
+  <title>Kanban — Multi-project</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
@@ -31,41 +31,49 @@
   </style>
 </head>
 
-<body class="bg-gray-100 font-sans h-screen flex">
+<body class="bg-gray-100 font-sans h-screen flex flex-col md:flex-row">
 
   <!-- SIDEBAR -->
-  <aside class="w-72 bg-white shadow-lg flex flex-col">
-    <div class="px-4 py-4 border-b">
+
+  <aside id="sidebar"
+    class="fixed md:static top-0 left-0 h-full md:h-auto w-72 bg-white shadow-lg flex flex-col transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40">
+    <div class="flex items-center justify-between px-4 py-4 border-b">
       <h2 class="text-lg font-semibold text-gray-800">Projects</h2>
+      <button id="closeSidebar" class="md:hidden text-xl text-gray-500 hover:text-gray-700">×</button>
     </div>
 
     <ul id="projectList" class="flex-1 overflow-auto p-3 space-y-2"></ul>
 
-    <div class="p-3 border-t">
-      <input id="newProjectName" type="text" placeholder="New project name"
-        class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring focus:ring-indigo-300 mb-2" />
-      <button onclick="addProject()" class="w-full bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700">+
-        Add Project</button>
-    </div>
-
-    <div class="p-3 border-t mt-2">
-      <button onclick="exportAll()" class="w-full bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 mb-2">
-        Export All Projects
+    <!-- Actions Dropdown -->
+    <div class="border-b p-3 relative">
+      <button id="actionsToggle"
+        class="w-full bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 flex items-center justify-between">
+        Settings <span id="actionsCaret">▴</span>
       </button>
-      <input type="file" id="importFile" class="mb-2 w-full text-sm" />
-      <button onclick="importAll()" class="w-full bg-yellow-600 text-white px-3 py-2 rounded-md hover:bg-yellow-700">
-        Import Projects
-      </button>
-      <button onclick="openArchiveModal()"
-        class="mt-2 w-full bg-gray-200 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-300">View Archive</button>
+      <div id="actionsMenu"
+        class="hidden absolute mt-1 bottom-[calc(100%)] left-3 right-3 bg-white border rounded-md shadow-md z-50 flex flex-col overflow-hidden">
+        <div class="flex p-1 gap-1">
+          <input id="newProjectName" type="text" placeholder="New project name"
+            class="w-full px-3 py-2 border-b focus:outline-none focus:ring focus:ring-indigo-300 rounded-tl" />
+          <button onclick="addProject()"
+            class="text-left px-3 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-r">Add</button>
+        </div>
+        <button onclick="exportAll()" class="text-left px-3 py-2 hover:bg-gray-100">Export All Projects</button>
+        <input type="file" id="importFile" class="text-sm px-3 py-2" />
+        <button onclick="importAll()" class="text-left px-3 py-2 hover:bg-gray-100">Import Projects</button>
+        <button onclick="openArchiveModal()" class="text-left px-3 py-2 hover:bg-gray-100">View Archive</button>
+      </div>
     </div>
-
   </aside>
+
 
   <!-- MAIN -->
   <div class="flex-1 flex flex-col">
-    <header class="flex items-center justify-between px-6 py-4 bg-white shadow">
-      <h1 class="text-2xl font-bold text-indigo-600" id="currentProject">Select a project</h1>
+    <header class="flex items-center justify-between p-3 md:px-6 md:py-4 bg-white shadow">
+      <div class="flex gap-2">
+        <button id="menuToggle" class="md:hidden text-gray-700 text-2xl px-1 focus:outline-none">☰</button>
+        <h1 class="text-2xl font-bold text-indigo-600" id="currentProject">Select a project</h1>
+      </div>
       <div class="flex items-center gap-3">
         <button onclick="openTaskModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">+
           New Task</button>
@@ -73,8 +81,8 @@
     </header>
 
     <!-- BOARD -->
-    <main class="flex-1 flex gap-6 px-6 py-6 overflow-x-auto">
-      <section class="flex-1 bg-white rounded-lg shadow p-2 flex flex-col w-1/4">
+    <main class="flex-1 flex flex-col md:flex-row gap-4 md:gap-6 px-3 md:px-6 py-4 md:py-6 overflow-x-auto">
+      <section class="flex-1 bg-white rounded-lg shadow p-2 flex flex-col w-full md:w-1/3">
         <div class="sticky top-0 bg-white py-3 z-10">
           <h2 class="text-lg font-medium text-gray-700 text-center">Todo</h2>
         </div>
@@ -82,7 +90,7 @@
         </div>
       </section>
 
-      <section class="flex-1 bg-white rounded-lg shadow p-2 flex flex-col w-1/4">
+      <section class="flex-1 bg-white rounded-lg shadow p-2 flex flex-col w-full md:w-1/3">
         <div class="sticky top-0 bg-white py-3 z-10">
           <h2 class="text-lg font-medium text-gray-700 text-center">In Progress</h2>
         </div>
@@ -90,7 +98,7 @@
           class="dropzone flex-1 space-y-3 p-2 rounded-md mt-1 ring-indigo-400 bg-gray-50 overflow-y-auto"></div>
       </section>
 
-      <section class="flex-1 bg-white rounded-lg shadow p-2 flex flex-col w-1/4">
+      <section class="flex-1 bg-white rounded-lg shadow p-2 flex flex-col w-full md:w-1/3">
         <div class="sticky top-0 bg-white py-3 z-10">
           <h2 class="text-lg font-medium text-gray-700 text-center">Done</h2>
         </div>
@@ -188,6 +196,7 @@
             opacity-0 pointer-events-none transition-opacity">
   </div>
 
+  <div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 hidden z-30 md:hidden"></div>
 
   <script>
     let dragged = null;
@@ -200,13 +209,20 @@
       const projects = JSON.parse(localStorage.getItem("projects") || "[]");
       const list = document.getElementById("projectList");
       list.innerHTML = "";
+      if (projects.length === 0) {
+        const li = document.createElement("li");
+        li.className = "flex items-center justify-between italic text-gray-400 text-sm";
+        li.textContent = "No projects. Please add from settings below.";
+        list.appendChild(li);
+      }
+
       projects.forEach(name => {
         const li = document.createElement("li");
+        li.setAttribute("data-project", name);
         li.className = "flex items-center justify-between px-3 py-2 bg-gray-100 rounded hover:bg-indigo-50 cursor-pointer";
         const left = document.createElement("div");
         left.className = "truncate";
         left.textContent = name;
-        left.onclick = () => switchProject(name);
         const right = document.createElement("div");
         right.className = "flex items-center gap-2";
         const del = document.createElement("button");
@@ -214,6 +230,7 @@
         del.textContent = "Delete";
         del.onclick = (e) => { e.stopPropagation(); deleteProject(name); };
         right.appendChild(del);
+        li.onclick = () => currentProject !== name && switchProject(name);
         li.appendChild(left);
         li.appendChild(right);
         list.appendChild(li);
@@ -243,6 +260,7 @@
       if (currentProject === name) {
         currentProject = null;
         document.getElementById("currentProject").textContent = "Select a project";
+        localStorage.removeItem("kanban.currentProject");
         clearBoard();
       }
       loadProjects();
@@ -250,6 +268,9 @@
 
     function switchProject(name) {
       currentProject = name;
+      const projectList = document.getElementById("projectList");
+      projectList.querySelectorAll("li").forEach(l => l.classList.remove("bg-indigo-50"));
+      projectList.querySelector(`li[data-project="${name}"]`)?.classList.add("bg-indigo-50");
       document.getElementById("currentProject").textContent = name;
       localStorage.setItem("kanban.currentProject", name);
       const saved = JSON.parse(localStorage.getItem("tasks_" + name) || "{}");
@@ -770,6 +791,42 @@
       });
     });
 
+
+    // --- Sidebar and dropdown toggles ---
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    const menuToggle = document.getElementById("menuToggle");
+    const closeSidebar = document.getElementById("closeSidebar");
+    const actionsToggle = document.getElementById("actionsToggle");
+    const actionsMenu = document.getElementById("actionsMenu");
+
+    if (menuToggle) {
+      menuToggle.addEventListener("click", () => {
+        sidebar.classList.remove("-translate-x-full");
+        overlay.classList.remove("hidden");
+      });
+    }
+
+    if (closeSidebar) {
+      closeSidebar.addEventListener("click", () => {
+        sidebar.classList.add("-translate-x-full");
+        overlay.classList.add("hidden");
+      });
+    }
+
+    if (overlay) {
+      overlay.addEventListener("click", () => {
+        sidebar.classList.add("-translate-x-full");
+        overlay.classList.add("hidden");
+      });
+    }
+
+    if (actionsToggle) {
+      actionsToggle.addEventListener("click", () => {
+        actionsMenu.classList.toggle("hidden");
+      });
+    }
+
     // --- Init ---
     function init() {
       loadProjects();
@@ -779,6 +836,5 @@
     init();
   </script>
 </body>
-
 
 </html>
