@@ -41,7 +41,13 @@
     class="fixed md:static top-0 left-0 h-full md:h-auto w-72 bg-white shadow-lg flex flex-col transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40">
     <div class="flex items-center justify-between px-4 py-4 border-b">
       <h2 class="text-lg font-semibold text-gray-800">Projects</h2>
-      <button id="closeSidebar" class="md:hidden text-xl text-gray-500 hover:text-gray-700">×</button>
+      <button onclick="openProjectModal()" class="text-indigo-600  p-2 rounded-md hover:bg-gray-100">
+        <svg class="fill-current" xmlns="http://www.w3.org/2000/svg" width="24px" height="24px"
+          viewBox="0 0 24 24">
+          <path class="fill-current" fill-rule="evenodd" clip-rule="evenodd"
+            d="M2.06935 5.00839C2 5.37595 2 5.81722 2 6.69975V13.75C2 17.5212 2 19.4069 3.17157 20.5784C4.34315 21.75 6.22876 21.75 10 21.75H14C17.7712 21.75 19.6569 21.75 20.8284 20.5784C22 19.4069 22 17.5212 22 13.75V11.5479C22 8.91554 22 7.59935 21.2305 6.74383C21.1598 6.66514 21.0849 6.59024 21.0062 6.51946C20.1506 5.75 18.8345 5.75 16.2021 5.75H15.8284C14.6747 5.75 14.0979 5.75 13.5604 5.59678C13.2651 5.5126 12.9804 5.39471 12.7121 5.24543C12.2237 4.97367 11.8158 4.56578 11 3.75L10.4497 3.19975C10.1763 2.92633 10.0396 2.78961 9.89594 2.67051C9.27652 2.15704 8.51665 1.84229 7.71557 1.76738C7.52976 1.75 7.33642 1.75 6.94975 1.75C6.06722 1.75 5.62595 1.75 5.25839 1.81935C3.64031 2.12464 2.37464 3.39031 2.06935 5.00839ZM12 11C12.4142 11 12.75 11.3358 12.75 11.75V13H14C14.4142 13 14.75 13.3358 14.75 13.75C14.75 14.1642 14.4142 14.5 14 14.5H12.75V15.75C12.75 16.1642 12.4142 16.5 12 16.5C11.5858 16.5 11.25 16.1642 11.25 15.75V14.5H10C9.58579 14.5 9.25 14.1642 9.25 13.75C9.25 13.3358 9.58579 13 10 13H11.25V11.75C11.25 11.3358 11.5858 11 12 11Z"/>
+        </svg>
+      </button>
     </div>
 
     <ul id="projectList" class="flex-1 overflow-auto p-3 space-y-2"></ul>
@@ -53,16 +59,12 @@
         Settings <span id="actionsCaret">▴</span>
       </button>
       <div id="actionsMenu"
-        class="hidden absolute mt-1 bottom-[calc(100%)] left-3 right-3 bg-white border rounded-md shadow-md z-50 flex flex-col overflow-hidden">
-        <div class="flex p-1 gap-1">
-          <input id="newProjectName" type="text" placeholder="New project name"
-            class="w-full px-3 py-2 border-b focus:outline-none focus:ring focus:ring-indigo-300 rounded-tl" />
-          <button onclick="addProject()"
-            class="text-left px-3 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-r">Add</button>
-        </div>
-        <button onclick="exportAll()" class="text-left px-3 py-2 hover:bg-gray-100">Export All Projects</button>
+        class="hidden absolute mt-1 p-1 bottom-[calc(100%)] left-3 right-3 bg-white border rounded-md shadow-md z-50 flex flex-col overflow-hidden">
         <input type="file" id="importFile" class="text-sm px-3 py-2" />
         <button onclick="importAll()" class="text-left px-3 py-2 hover:bg-gray-100">Import Projects</button>
+        <hr>
+        <button onclick="exportAll()" class="text-left px-3 py-2 hover:bg-gray-100">Export All Projects</button>
+        <hr>
         <button onclick="openArchiveModal()" class="text-left px-3 py-2 hover:bg-gray-100">View Archive</button>
       </div>
     </div>
@@ -113,6 +115,27 @@
       <div class="px-6 pb-3 text-center">
         <p class="text-xs text-gray-600">2025 © Developed by Atif Mustaffa</p>
     </footer>
+  </div>
+
+  <!-- Project Modal -->
+  <div id="projectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 w-96 shadow-lg">
+      <h2 id="projectModalTitle" class="text-xl font-semibold mb-4">Add New Task</h2>
+
+      <input id="modalProjectName" type="text" placeholder="Project title"
+        class="w-full px-3 py-2 border rounded-md mb-2 focus:outline-none focus:ring focus:ring-indigo-400" />
+
+      <div class="flex justify-end gap-2">
+        <button onclick="closeProjectModal()" class="px-4 py-2 rounded-md border hover:bg-gray-100">Cancel</button>
+
+        <!-- Add button -->
+        <button id="modalAddProjectBtn" onclick="addProjectFromModal()"
+          class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">
+          Add
+        </button>
+      </div>
+
+    </div>
   </div>
 
   <!-- Task Modal -->
@@ -193,6 +216,21 @@
     </div>
   </div>
 
+  <!-- Move Modal -->
+  <div id="moveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 w-96 shadow-lg">
+      <h2 class="text-xl font-semibold mb-4">Move Task</h2>
+      <div class="flex justify-around mt-4">
+        <button onclick="moveTask('todo')" class="move-btn move-todo px-4 py-2 rounded-md border text-white bg-indigo-600 hover:bg-indigo-700">Todo</button>
+        <button onclick="moveTask('progress')" class="move-btn move-progress px-4 py-2 rounded-md border text-white bg-blue-600 hover:bg-blue-700">In Progress</button>
+        <button onclick="moveTask('done')" class="move-btn move-done px-4 py-2 rounded-md border text-white bg-green-600 hover:bg-green-700">Done</button>
+      </div>
+      <div class="flex justify-end mt-4">
+        <button onclick="closeMoveTaskModal()" class="px-4 py-2 rounded-md border hover:bg-gray-100">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Global tooltip -->
   <div id="tooltip" class="fixed bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-50
             opacity-0 pointer-events-none transition-opacity">
@@ -221,7 +259,7 @@
       projects.forEach(name => {
         const li = document.createElement("li");
         li.setAttribute("data-project", name);
-        li.className = "flex items-center justify-between px-3 py-2 bg-gray-100 rounded hover:bg-indigo-50 cursor-pointer";
+        li.className = "flex items-center justify-between px-3 py-2 bg-gray-50 rounded hover:bg-indigo-50 cursor-pointer";
         const left = document.createElement("div");
         left.className = "truncate";
         left.textContent = name;
@@ -239,8 +277,8 @@
       });
     }
 
-    function addProject() {
-      const input = document.getElementById("newProjectName");
+    function addProjectFromModal() {
+      const input = document.getElementById("modalProjectName");
       const name = input.value.trim();
       if (!name) return alert("Project name required");
       let projects = JSON.parse(localStorage.getItem("projects") || "[]");
@@ -251,6 +289,7 @@
       input.value = "";
       loadProjects();
       switchProject(name);
+      closeProjectModal();
     }
 
     function deleteProject(name) {
@@ -398,7 +437,14 @@
       delOpt.textContent = "Delete";
       delOpt.onclick = (e) => { e.stopPropagation(); div.remove(); saveTasks(); };
 
+      // Move option
+      const moveOpt = document.createElement("button");
+      moveOpt.className = "text-left px-3 py-1 w-full hover:bg-gray-100 text-sm rounded";
+      moveOpt.textContent = "Move";
+      moveOpt.onclick = (e) => { e.stopPropagation(); openMoveTaskModal(div); menuContent.classList.add("hidden"); };
+
       menuContent.appendChild(editOpt);
+      menuContent.appendChild(moveOpt);
       menuContent.appendChild(archOpt);
       menuContent.appendChild(delOpt);
       actionWrapper.appendChild(menuBtn);
@@ -425,15 +471,15 @@
         dragFrom = div.parentElement.id;
       });
       div.addEventListener("dragend", () => {
-        let sameZone = dragFrom === div.parentElement.id;
+        const zone = div.parentElement.id;
+        let sameZone = dragFrom === zone;
         dragged = null;
         dragFrom = null;
         if (sameZone) return;
         updateTaskTimestamps(div);
-        insertTaskSorted(div);
+        insertTaskSorted(zone, div);
 
         saveTasks();
-        console.log("Task updated", JSON.parse(div.dataset.task));
       });
 
       // store the object in dataset for easier save/load
@@ -478,8 +524,7 @@
       attachTooltip(tsSpan, new Date(timestamp).toLocaleString());
     }
 
-    function insertTaskSorted(div) {
-      const zone = div.parentElement.id;
+    function insertTaskSorted(zone, div) {
       const SORTED_ZONE = ['done'];
       if (!SORTED_ZONE.includes(zone)) return;
 
@@ -555,9 +600,10 @@
 
       const taskDiv = createTask(taskObj);
       document.getElementById(lastParentId).appendChild(taskDiv);
+      const zone = taskDiv.parentElement.id;
 
       // re-sort
-      insertTaskSorted(taskDiv);
+      insertTaskSorted(zone, taskDiv);
 
       saveTasks();
       if (archived.length) openArchiveModal(); // refresh archive list
@@ -605,6 +651,22 @@
       };
       reader.readAsText(file);
       fileInput.value = "";
+    }
+
+    function openProjectModal() {
+      document.getElementById("projectModalTitle").textContent = "Add New Project";
+      document.getElementById("projectModal").classList.remove("hidden");
+      document.getElementById("modalProjectName").value = "";
+      document.getElementById("modalProjectName").focus();
+    }
+
+    function closeProjectModal() {
+      document.getElementById("projectModal").classList.add("hidden");
+
+      // Clear inputs
+      document.getElementById("modalProjectName").value = "";
+
+      editingTaskDiv = null;
     }
 
     function openTaskModal() {
@@ -699,6 +761,39 @@
 
     function closeViewTaskModal() {
       document.getElementById("viewTaskModal").classList.add("hidden");
+    }
+
+    function openMoveTaskModal(div) {
+      const zone = div.parentElement.id;
+      editingTaskDiv = div;
+
+      document.getElementById("moveModal").classList.remove("hidden");
+      document.querySelectorAll('.move-btn').forEach(function (moveBtn) {
+        if (moveBtn.classList.contains("move-" + zone)) {
+          moveBtn.classList.add("hidden");
+        } else {
+          moveBtn.classList.remove("hidden");
+        }
+      });
+    }
+
+    function moveTask(toZone) {
+      const zone = editingTaskDiv.parentElement.id;
+      const taskObj = JSON.parse(editingTaskDiv.dataset.task);
+      const taskDiv = createTask(taskObj);
+      if (zone === toZone) return closeMoveTaskModal(); // Same zone, do nothing
+      
+      document.getElementById(toZone).appendChild(taskDiv);
+      editingTaskDiv.remove();
+      updateTaskTimestamps(taskDiv);
+      insertTaskSorted(toZone, taskDiv);
+      saveTasks();
+      closeMoveTaskModal();
+    }
+
+    function closeMoveTaskModal() {
+      document.getElementById("moveModal").classList.add("hidden");
+      editingTaskDiv = null;
     }
 
     function openArchiveModal() {
@@ -798,36 +893,41 @@
     const sidebar = document.getElementById("sidebar");
     const overlay = document.getElementById("overlay");
     const menuToggle = document.getElementById("menuToggle");
-    const closeSidebar = document.getElementById("closeSidebar");
     const actionsToggle = document.getElementById("actionsToggle");
     const actionsMenu = document.getElementById("actionsMenu");
 
     if (menuToggle) {
       menuToggle.addEventListener("click", () => {
-        sidebar.classList.remove("-translate-x-full");
-        overlay.classList.remove("hidden");
-      });
-    }
-
-    if (closeSidebar) {
-      closeSidebar.addEventListener("click", () => {
-        sidebar.classList.add("-translate-x-full");
-        overlay.classList.add("hidden");
+        sidebar?.classList.remove("-translate-x-full");
+        overlay?.classList.remove("hidden");
       });
     }
 
     if (overlay) {
       overlay.addEventListener("click", () => {
-        sidebar.classList.add("-translate-x-full");
-        overlay.classList.add("hidden");
+        sidebar?.classList.add("-translate-x-full");
+        overlay?.classList.add("hidden");
+        actionsMenu?.classList.toggle("hidden", true);
       });
     }
 
     if (actionsToggle) {
       actionsToggle.addEventListener("click", () => {
-        actionsMenu.classList.toggle("hidden");
+        actionsMenu?.classList.toggle("hidden");
       });
     }
+
+    document.querySelectorAll('.fixed.inset-0.bg-black').forEach(el => {
+      if (overlay && overlay === el) return;
+
+      el.addEventListener("click", () => {
+        closeProjectModal();
+        closeTaskModal();
+        closeViewTaskModal();
+        closeMoveTaskModal();
+        closeArchiveModal();
+      });
+    });
 
     // --- Init ---
     function init() {
@@ -840,6 +940,3 @@
 </body>
 
 </html>
-
-
-
